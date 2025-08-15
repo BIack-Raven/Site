@@ -1,0 +1,141 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financement de Projets Audiovisuels</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        select, button {
+            padding: 8px;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Financement de Projets Audiovisuels</h1>
+
+    <div>
+        <label for="regionFilter">Région:</label>
+        <select id="regionFilter">
+            <option value="">Toutes</option>
+            <!-- Les options seront dynamiquement remplies via JavaScript -->
+        </select>
+
+        <label for="formatFilter">Format:</label>
+        <select id="formatFilter">
+            <option value="">Tous</option>
+            <!-- Options pour filtrer par format -->
+        </select>
+
+        <button onclick="filterTable()">Filtrer</button>
+    </div>
+
+    <table id="festivalsTable">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Pays</th>
+                <th>Format</th>
+                <th>Date de l'Événement</th>
+                <th>Lien</th>
+            </tr>
+        </thead>
+        <tbody id="festivalsTableBody">
+            <!-- Le contenu sera rempli dynamiquement à partir du fichier CSV -->
+        </tbody>
+    </table>
+
+    <script>
+        // Fonction pour charger et afficher les données
+        async function loadData() {
+            const response = await fetch('cleaned_festivals_data.csv');
+            const data = await response.text();
+            const rows = data.split('
+').slice(1); // Ignorer l'en-tête
+
+            const tableBody = document.getElementById('festivalsTableBody');
+            tableBody.innerHTML = ''; // Vider le tableau avant de remplir
+
+            const regions = new Set();
+            const formats = new Set();
+
+            rows.forEach(row => {
+                const columns = row.split(',');
+                if (columns.length > 1) { // S'assurer qu'il y a des données
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${columns[1]}</td>  <!-- Nom -->
+                        <td>${columns[3]}</td>  <!-- Pays -->
+                        <td>${columns[11]}</td> <!-- Format -->
+                        <td>${columns[5]}</td> <!-- Event Date -->
+                        <td><a href="${columns[14]}" target="_blank">Lien</a></td> <!-- Lien -->
+                    `;
+                    tableBody.appendChild(tr);
+
+                    // Collecter régions et formats pour les filtres
+                    regions.add(columns[3]);
+                    formats.add(columns[11]);
+                }
+            });
+
+            // Remplir les options de filtres
+            const regionFilter = document.getElementById('regionFilter');
+            regions.forEach(region => {
+                const option = document.createElement('option');
+                option.value = region;
+                option.textContent = region;
+                regionFilter.appendChild(option);
+            });
+
+            const formatFilter = document.getElementById('formatFilter');
+            formats.forEach(format => {
+                const option = document.createElement('option');
+                option.value = format;
+                option.textContent = format;
+                formatFilter.appendChild(option);
+            });
+        }
+
+        // Fonction pour filtrer le tableau
+        function filterTable() {
+            const regionFilter = document.getElementById('regionFilter').value;
+            const formatFilter = document.getElementById('formatFilter').value;
+
+            const rows = document.querySelectorAll('#festivalsTableBody tr');
+            rows.forEach(row => {
+                const country = row.cells[1].textContent;
+                const format = row.cells[2].textContent;
+
+                const regionMatch = regionFilter === '' || country === regionFilter;
+                const formatMatch = formatFilter === '' || format === formatFilter;
+
+                if (regionMatch && formatMatch) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Charger les données au démarrage
+        loadData();
+    </script>
+</body>
+</html>
